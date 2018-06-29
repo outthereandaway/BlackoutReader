@@ -38,8 +38,10 @@ const unsigned long numSamples = 250UL;
 const unsigned long sampleInterval = sampleTime/numSamples;
 
 float voltEff = 0; // actual measured voltage value
-float storVal = 0; // stored previous voltage value
+byte i=0; 
+float storVal[10]; // stored previous voltage values
 bool pwlOn = false; // power on/off
+float voltDrop=0; 
 
 
 
@@ -69,6 +71,12 @@ void setup() {
   // reference for analog input. DEFAULT is 5V internal voltage. Problem --> not constant
   analogReference(DEFAULT);
 
+  for (byte k=0;k=9;k++){
+    voltEff = voltSense(input, sampleInterval, numSamples); // taking measurements
+    storVal[k] = voltEff;
+    delay(500);
+    }
+
 }
 
 
@@ -78,57 +86,79 @@ void setup() {
 ///////////////////////////////////////////////////////////////////
 
 void loop() {
-  // put your main code here, to run repeatedly:
-    
-  voltEff = voltSense(input, sampleInterval, numSamples); // taking measurements
-  Serial.println(voltEff); // printing measurements on serial monitor
+// put your main code here, to run repeatedly:
+ 
+  float AvStorVal=0;
 
-//  byte w = (i - 4);
-//  byte x = (i - 5);
-//  byte y = (i - 6);
-
-
-
-
-  if ((storVal * 0.01) > voltEff) {
-
-    pwlOn = false;
-    payload[0] = lineIdent;
-    payload[1] = phaseIdent;
-    payload[2] = pwlOn;
-    debugSerial.println("-- SEND");
-    ttn.sendBytes(payload, sizeof(payload));
-    
-  }
-
-
-  if ((storVal / 0.01) < voltEff) {
-
-    pwlOn = true;
-    payload[0] = lineIdent;
-    payload[1] = phaseIdent;
-    payload[2] = pwlOn;
-    debugSerial.println("-- SEND");
-    ttn.sendBytes(payload, sizeof(payload));
-    
-  }
-
-  
-  storVal = voltEff;
-  
-  delay(500);
-
-  
-  if (millis() >= lastMess + (intervMess * 1000)) {
-
-    payload[0] = lineIdent;
-    payload[1] = phaseIdent;
-    payload[2] = pwlOn;
-    debugSerial.println("-- SEND");
-    ttn.sendBytes(payload, sizeof(payload));
-    lastMess = millis();
-    
-  }
+  for (byte j=0;j=9;j++){
+    AvStorVal=AvStorVal+storVal[j];
+   }
+  Serial.println(AvStorVal);
+//    
+//  voltEff = voltSense(input, sampleInterval, numSamples); // taking measurements
+//  storVal[i] = voltEff;
+//  Serial.println(voltEff); // printing measurements on serial monitor
+//
+//
+//  if (((AvStorVal/10)*0.01) > voltEff) {
+//
+//  byte DropCount=0;
+//    
+//    for (byte p=0;p=2;p++){
+//      voltDrop = voltSense(input, sampleInterval, numSamples); // taking measurements
+//
+//      
+//      if (((AvStorVal/10)*0.01) > voltDrop) {
+//        DropCount=DropCount+1;
+//      }
+//      
+//    }
+//
+//    if (DropCount=3){
+//      pwlOn = false;
+//      payload[0] = lineIdent;
+//      payload[1] = phaseIdent;
+//      payload[2] = pwlOn;
+//      debugSerial.println("-- SEND");
+//      ttn.sendBytes(payload, sizeof(payload));
+//    }
+//    
+//  }
+//
+//
+//  if ((storVal[i] / 0.05) < voltEff) {
+//
+//    pwlOn = true;
+//    payload[0] = lineIdent;
+//    payload[1] = phaseIdent;
+//    payload[2] = pwlOn;
+//    debugSerial.println("-- SEND");
+//    ttn.sendBytes(payload, sizeof(payload));
+//    
+//  }
+//
+//  
+//  //storVal[i] = voltEff;
+//  
+//  delay(500);
+//
+//  
+//  if (millis() >= lastMess + (intervMess * 1000)) {
+//
+//    payload[0] = lineIdent;
+//    payload[1] = phaseIdent;
+//    payload[2] = pwlOn;
+//    debugSerial.println("-- SEND");
+//    ttn.sendBytes(payload, sizeof(payload));
+//    lastMess = millis();
+//    
+//  }
+//
+//  i++;
+//
+//  if (i>9){
+//    i=0;
+//  }
 
 }
 
